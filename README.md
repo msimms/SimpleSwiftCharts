@@ -4,7 +4,7 @@ Code for making various charts in Swift; nothing too fancy but it'll do if you j
 * BarChartView.swift
 * LineGraphView.swift
 <p align="center">
-<img src="https://github.com/msimms/SimpleSwiftCharts/blob/master/images/line_graph.png?raw=true" alt="Line Graph" width=256/>
+<img src="https://github.com/msimms/SimpleSwiftCharts/blob/main/images/line_graph.png?raw=true" alt="Line Graph" width=512/>
 </p>
 
 ## Building
