@@ -2,6 +2,10 @@
 Code for making various charts in Swift; nothing too fancy but it'll do if you just need to add a simple bar or line chart to your app so you can get up and running.
 
 * BarChartView.swift
+<p align="center">
+<img src="https://github.com/msimms/SimpleSwiftCharts/blob/main/images/bar_chart.jpg?raw=true" alt="Line Graph" width=512/>
+</p>
+
 * LineGraphView.swift
 <p align="center">
 <img src="https://github.com/msimms/SimpleSwiftCharts/blob/main/images/line_graph.png?raw=true" alt="Line Graph" width=512/>
