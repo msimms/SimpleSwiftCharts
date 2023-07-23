@@ -20,6 +20,12 @@ Code for making various charts in Swift; nothing too fancy but it'll do if you j
 <img src="https://github.com/msimms/SimpleSwiftCharts/blob/main/images/line_graph.png?raw=true" alt="Line Graph" width=512/>
 </p>
 
+	func hrFormatter(num: Double) -> String {
+		return String(format: "%0.0f", num)
+	}
+
+    LineGraphView(points: self.data, color: Color.red, formatter: self.hrFormatter)
+
 ## Building
 Just add this repo to your project as a submodule and then add the source files directly to your project in XCode.
 
