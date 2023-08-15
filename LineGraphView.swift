@@ -85,39 +85,48 @@ struct LinePoint: Identifiable {
 struct LineGraphView: View {
 	let points: Array<LinePoint>
 	let color: Color
-	let formatter: ((_ num: Double) -> String)?
+	let xFormatter: ((_ num: Double) -> String)?
+	let yFormatter: ((_ num: Double) -> String)?
 	@State private var orientation = UIDevice.current.orientation
 
-	init(points: [(UInt64, Double)], color: Color, formatter: ((_ num: Double) -> String)?) {
+	init(points: [(UInt64, Double)], color: Color, xFormatter: ((_ num: Double) -> String)?, yFormatter: ((_ num: Double) -> String)?) {
 		self.points = points.map { LinePoint(x:$0, y:$1) }
 		self.color = color
-		self.formatter = formatter
+		self.xFormatter = xFormatter
+		self.yFormatter = yFormatter
 	}
 
-	func formatYAxisValue(num: Double) -> String {
-		if self.formatter == nil {
+	func formatXAxisValue(num: Double) -> String {
+		if self.xFormatter == nil {
 			return String(num)
 		}
-		return self.formatter!(num)
+		return self.xFormatter!(num)
 	}
-
+	
+	func formatYAxisValue(num: Double) -> String {
+		if self.yFormatter == nil {
+			return String(num)
+		}
+		return self.yFormatter!(num)
+	}
+	
     var body: some View {
 		GeometryReader { geometry in
-			let canvasMinX: Double = 50.0
-			let canvasMinY: Double = 10.0
+			let canvasMinX: Double = self.orientation.isLandscape ? 45.0 : 15.0
+			let canvasMinY: Double = self.orientation.isLandscape ? 5.0 : 15.0
 			let numXHashmarks: Int = self.orientation.isLandscape ? 10 : 5
 			let numYHashmarks: Int = self.orientation.isLandscape ? 5 : 10
-			let hashMarkLength: Double = 16.0
+			let hashMarkLength: Double = 15.0
 			let axisWidth: Double = 4.0
-			let canvasMaxX: Double = geometry.size.width - canvasMinX
+			let canvasMaxX: Double = geometry.size.width
 			let canvasMaxY: Double = geometry.size.height - canvasMinY
 			let origin: CGPoint = CGPoint(x: canvasMinX, y: canvasMaxY + axisWidth / 2)
 			let xAxisTop: CGPoint = CGPoint(x: canvasMaxX, y: origin.y)
 			let yAxisTop: CGPoint = CGPoint(x: origin.x, y: canvasMinY - axisWidth)
-			var axisXOffset: Double = canvasMaxX
-			var axisYOffset: Double = canvasMaxY
+			var tempAxisXOffset: Double = canvasMaxX
+			var tempAxisYOffset: Double = canvasMaxY
 			let xAxisHashMarkSpacing = (canvasMaxX / Double(numXHashmarks))
-			let yAxisHashMarkSpacing = ((canvasMaxY - canvasMinY) / Double(numYHashmarks))
+			let yAxisHashMarkSpacing = (canvasMaxY - canvasMinY) / Double(numYHashmarks)
 			let components = UIColor(self.color).cgColor.components!
 			let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
 			let gradient = LinearGradient(
@@ -144,8 +153,8 @@ struct LineGraphView: View {
 				// Draw the X axis hash marks.
 				Path { path in
 					for _ in 1...numXHashmarks {
-						let canvasX = canvasMinX + (canvasMaxX - axisXOffset)
-						axisXOffset -= xAxisHashMarkSpacing
+						let canvasX = canvasMinX + (canvasMaxX - tempAxisXOffset)
+						tempAxisXOffset -= xAxisHashMarkSpacing
 						
 						path.move(to: CGPoint(x: canvasX, y: canvasMaxY))
 						path.addLine(to: CGPoint(x: canvasX, y: canvasMaxY + hashMarkLength))
@@ -156,11 +165,11 @@ struct LineGraphView: View {
 				// Draw the Y axis hash marks.
 				Path { path in
 					for _ in 1...numYHashmarks {
-						let canvasY = canvasMinY + (canvasMaxY - axisYOffset)
-						axisYOffset -= yAxisHashMarkSpacing
+						let canvasY = canvasMinY + (canvasMaxY - tempAxisYOffset)
+						tempAxisYOffset -= yAxisHashMarkSpacing
 						
 						// Don't draw past the axis line.
-						if axisYOffset <= yAxisTop.y {
+						if tempAxisYOffset <= yAxisTop.y {
 							break
 						}
 
@@ -183,8 +192,8 @@ struct LineGraphView: View {
 			Group() {
 
 				// Add the Y axis labels.
-				let minY = self.points.map { $0.y }.min() ?? 0
-				let maxY = self.points.map { $0.y }.max() ?? 0
+				let minY = self.points.map { $0.y }.min() ?? 0.0
+				let maxY = self.points.map { $0.y }.max() ?? 0.0
 				let rangeY = maxY - minY
 				ForEach(1..<11) { i in
 					let canvasYOffset: Double = Double(i) * yAxisHashMarkSpacing
@@ -196,8 +205,28 @@ struct LineGraphView: View {
 					// Don't draw past the axis line.
 					if canvasY > yAxisTop.y {
 						Text(formattedValue)
-							.position(x: origin.x - 28.0, y: canvasY - 20.0)
+							.frame(maxWidth: .infinity, alignment: .center)
+							.position(x: origin.x - 28.0, y: canvasY - canvasMinX - 10.0)
 					}
+				}
+			}
+
+			Group() {
+				
+				// Add the X axis labels.
+				let minX = self.points.map { Double($0.x) }.min() ?? 0.0
+				let maxX = self.points.map { Double($0.x) }.max() ?? 0.0
+				let rangeX = maxX - minX
+				ForEach(1..<5) { i in
+					let canvasXOffset: Double = Double(i) * xAxisHashMarkSpacing
+					let canvasX: Double = canvasMinX + canvasXOffset
+					let axisStep: Double = Double(i) * (rangeX / Double(numXHashmarks))
+					let axisValue: Double = minX + axisStep
+					let formattedValue: String = self.formatXAxisValue(num: axisValue)
+					
+					Text(formattedValue)
+						.frame(maxWidth: .infinity, alignment: .center)
+						.position(x: canvasX, y: origin.y + hashMarkLength + 3)
 				}
 			}
 		}
