@@ -39,23 +39,15 @@ struct BarChartView: View {
 	let max: Double
 	let color: Color
 	let units: String
-	private var description: String = ""
+	let description: String
 	@State private var showsAlert = false
 	
-	init(bars: [Bar], color: Color, units: String) {
+	init(bars: [Bar], color: Color, units: String, description: String) {
 		self.bars = bars
 		self.max = bars.map { $0.value }.max() ?? 0
 		self.color = color
 		self.units = units
-		var zoneNum = 1
-		for bar in bars {
-			self.description += "Zone "
-			self.description += String(zoneNum)
-			self.description += " : "
-			self.description += bar.description
-			self.description += "\n"
-			zoneNum += 1
-		}
+		self.description = description
 	}
 	
 	var body: some View {
