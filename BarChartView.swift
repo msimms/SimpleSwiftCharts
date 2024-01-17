@@ -55,17 +55,19 @@ struct BarChartView: View {
 			HStack(alignment: .bottom) {
 				ForEach(self.bars) { bar in
 					ZStack() {
+						let height = CGFloat(bar.value) / CGFloat(self.max) * geometry.size.height
 						Rectangle()
-							.frame(height: CGFloat(bar.value) / CGFloat(self.max) * geometry.size.height)
+							.frame(height: height)
 							.overlay(Rectangle().stroke(self.color).background(self.color))
 							.accessibility(label: Text(bar.label + " " + self.units))
 							.onTapGesture {
 								self.showsAlert = true
 							}
 						Text(bar.label + " " + self.units)
-							.font(.title3)
+							.font(.subheadline)
+							.multilineTextAlignment(.center)
 							.rotationEffect(Angle(degrees: -90))
-							.offset(y: 0)
+							.frame(height: height)
 					}
 					.alert(isPresented: self.$showsAlert) { () -> Alert in
 						Alert(title: Text("Description"), message: Text(self.description))}
