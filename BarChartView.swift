@@ -59,11 +59,11 @@ struct BarChartView: View {
 						Rectangle()
 							.frame(height: height)
 							.overlay(Rectangle().stroke(self.color).background(self.color))
-							.accessibility(label: Text(bar.label + " " + self.units))
+							.accessibility(label: Text(bar.label))
 							.onTapGesture {
 								self.showsAlert = true
 							}
-						Text(bar.label + " " + self.units)
+						Text(bar.label)
 							.font(.subheadline)
 							.multilineTextAlignment(.center)
 							.rotationEffect(Angle(degrees: -90))
