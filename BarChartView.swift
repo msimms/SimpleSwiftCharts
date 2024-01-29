@@ -30,7 +30,8 @@ import SwiftUI
 struct Bar: Identifiable {
 	let id: UUID = UUID()
 	let value: Double
-	let label: String
+	let bodyLabel: String
+	let axisLabel: String
 	let description: String
 }
 
@@ -54,20 +55,23 @@ struct BarChartView: View {
 		GeometryReader { geometry in
 			HStack(alignment: .bottom) {
 				ForEach(self.bars) { bar in
-					ZStack() {
-						let height = CGFloat(bar.value) / CGFloat(self.max) * geometry.size.height
-						Rectangle()
-							.frame(height: height)
-							.overlay(Rectangle().stroke(self.color).background(self.color))
-							.accessibility(label: Text(bar.label))
-							.onTapGesture {
-								self.showsAlert = true
-							}
-						Text(bar.label)
-							.font(.subheadline)
-							.multilineTextAlignment(.center)
-							.rotationEffect(Angle(degrees: -90))
-							.frame(height: height)
+					VStack() {
+						ZStack() {
+							let height = CGFloat(bar.value) / CGFloat(self.max) * geometry.size.height
+							Rectangle()
+								.frame(height: height)
+								.overlay(Rectangle().stroke(self.color).background(self.color))
+								.accessibility(label: Text(bar.bodyLabel))
+								.onTapGesture {
+									self.showsAlert = true
+								}
+							Text(bar.bodyLabel)
+								.font(.subheadline)
+								.multilineTextAlignment(.center)
+								.rotationEffect(Angle(degrees: -90))
+								.frame(height: height)
+						}
+						Text(bar.axisLabel)
 					}
 					.alert(isPresented: self.$showsAlert) { () -> Alert in
 						Alert(title: Text("Description"), message: Text(self.description))}
