@@ -36,7 +36,7 @@ struct Line: Shape {
 	let maxY: Double
 	let rangeX: Double
 	let rangeY: Double
-
+	
 	init(points: Array<LinePoint>, origin: CGPoint) {
 		self.points = points
 		self.origin = origin
@@ -47,13 +47,13 @@ struct Line: Shape {
 		self.rangeX = self.maxX - self.minX
 		self.rangeY = self.maxY - self.minY
 	}
-
+	
 	func path(in rect: CGRect) -> Path {
 		let canvasSpreadX: Double = rect.width - rect.origin.x
 		let canvasSpreadY: Double = rect.origin.y - rect.height
 		var lastX = rect.origin.x
 		var path = Path()
-
+		
 		path.move(to: origin)
 		
 		for point in self.points {
@@ -64,14 +64,14 @@ struct Line: Shape {
 			let offsetY = point.y - self.minY
 			let percentageY = offsetY / self.rangeY
 			let canvasY = origin.y + (canvasSpreadY * percentageY)
-
+			
 			path.addLine(to: CGPoint(x: canvasX, y: canvasY))
 			lastX = canvasX
 		}
 		
 		path.addLine(to: CGPoint(x: lastX, y: origin.y))
 		path.closeSubpath()
-
+		
 		return path
 	}
 }
@@ -87,15 +87,18 @@ struct LineGraphView: View {
 	let color: Color
 	let xFormatter: ((_ num: Double) -> String)?
 	let yFormatter: ((_ num: Double) -> String)?
+#if os(macOS)
+#else
 	@State private var orientation = UIDevice.current.orientation
-
+#endif
+	
 	init(points: [(UInt64, Double)], color: Color, xFormatter: ((_ num: Double) -> String)?, yFormatter: ((_ num: Double) -> String)?) {
 		self.points = points.map { LinePoint(x:$0, y:$1) }
 		self.color = color
 		self.xFormatter = xFormatter
 		self.yFormatter = yFormatter
 	}
-
+	
 	func formatXAxisValue(num: Double) -> String {
 		if self.xFormatter == nil {
 			return String(num)
@@ -110,12 +113,19 @@ struct LineGraphView: View {
 		return self.yFormatter!(num)
 	}
 	
-    var body: some View {
+	var body: some View {
 		GeometryReader { geometry in
+#if os(macOS)
+			let canvasMinX: Double = 45.0
+			let canvasMinY: Double = 5.0
+			let numXHashmarks: Int = 10
+			let numYHashmarks: Int = 5
+#else
 			let canvasMinX: Double = self.orientation.isLandscape ? 45.0 : 15.0
 			let canvasMinY: Double = self.orientation.isLandscape ? 5.0 : 15.0
 			let numXHashmarks: Int = self.orientation.isLandscape ? 10 : 5
 			let numYHashmarks: Int = self.orientation.isLandscape ? 5 : 10
+#endif
 			let hashMarkLength: Double = 15.0
 			let axisWidth: Double = 4.0
 			let canvasMaxX: Double = geometry.size.width
@@ -127,16 +137,20 @@ struct LineGraphView: View {
 			var tempAxisYOffset: Double = canvasMaxY
 			let xAxisHashMarkSpacing = (canvasMaxX / Double(numXHashmarks))
 			let yAxisHashMarkSpacing = (canvasMaxY - canvasMinY) / Double(numYHashmarks)
+#if os(macOS)
+			let fadedColor = Color(red: 0.5, green: 0.5, blue: 0.5)
+#else
 			let components = UIColor(self.color).cgColor.components!
 			let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
+#endif
 			let gradient = LinearGradient(
 				gradient: .init(colors: [self.color, fadedColor]),
 				startPoint: .top,
 				endPoint: .bottom
 			)
-
+			
 			Group() {
-
+				
 				// Draw the axis lines.
 				Path { path in
 					
@@ -172,13 +186,13 @@ struct LineGraphView: View {
 						if tempAxisYOffset <= yAxisTop.y {
 							break
 						}
-
+						
 						path.move(to: CGPoint(x: canvasMinX, y: canvasY))
 						path.addLine(to: CGPoint(x: canvasMinX - hashMarkLength, y: canvasY))
 					}
 				}
 				.stroke(.gray, lineWidth: axisWidth / 2)
-
+				
 				// Draw the data line.
 				let lineWidth = xAxisTop.x - origin.x
 				let lineHeight = origin.y - yAxisTop.y
@@ -188,9 +202,9 @@ struct LineGraphView: View {
 						.frame(width: lineWidth, height: lineHeight)
 				}
 			}
-
+			
 			Group() {
-
+				
 				// Add the Y axis labels.
 				let minY = self.points.map { $0.y }.min() ?? 0.0
 				let maxY = self.points.map { $0.y }.max() ?? 0.0
@@ -201,7 +215,7 @@ struct LineGraphView: View {
 					let axisStep: Double = Double(i) * (rangeY / Double(numYHashmarks))
 					let axisValue: Double = minY + axisStep
 					let formattedValue: String = self.formatYAxisValue(num: axisValue)
-
+					
 					// Don't draw past the axis line.
 					if canvasY > yAxisTop.y {
 						Text(formattedValue)
@@ -210,7 +224,7 @@ struct LineGraphView: View {
 					}
 				}
 			}
-
+			
 			Group() {
 				
 				// Add the X axis labels.
@@ -230,5 +244,5 @@ struct LineGraphView: View {
 				}
 			}
 		}
-    }
+	}
 }
