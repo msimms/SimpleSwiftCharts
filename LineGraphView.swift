@@ -209,7 +209,7 @@ struct LineGraphView: View {
 				let minY = self.points.map { $0.y }.min() ?? 0.0
 				let maxY = self.points.map { $0.y }.max() ?? 0.0
 				let rangeY = maxY - minY
-				ForEach(0..<5) { i in
+				ForEach(0..<numYHashmarks, id: \.self) { i in
 					let canvasYOffset: Double = Double(i) * yAxisHashMarkSpacing
 					let canvasY: Double = canvasMinY + (canvasMaxY - canvasYOffset)
 					let axisStep: Double = Double(i) * (rangeY / Double(numYHashmarks))
@@ -231,7 +231,7 @@ struct LineGraphView: View {
 				let minX = self.points.map { Double($0.x) }.min() ?? 0.0
 				let maxX = self.points.map { Double($0.x) }.max() ?? 0.0
 				let rangeX = maxX - minX
-				ForEach(0..<10) { i in
+				ForEach(0..<numXHashmarks, id: \.self) { i in
 					let canvasXOffset: Double = Double(i) * xAxisHashMarkSpacing
 					let canvasX: Double = canvasMinX + canvasXOffset
 					let axisStep: Double = Double(i) * (rangeX / Double(numXHashmarks))
