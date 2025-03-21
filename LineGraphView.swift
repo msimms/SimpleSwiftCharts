@@ -82,7 +82,22 @@ struct LinePoint: Identifiable {
 	let y: Double
 }
 
+struct LinePopoverView: View {
+	let xStr: String
+	let yStr: String
+	
+	var body: some View {
+		VStack {
+			Text(xStr + ", " + yStr)
+				.padding()
+		}
+		.padding()
+	}
+}
+
 struct LineGraphView: View {
+	@State var isPopover = false
+	@State var hoverIndex: size_t = 0
 	let points: Array<LinePoint>
 	let color: Color
 	let xFormatter: ((_ num: Double) -> String)?
@@ -201,6 +216,20 @@ struct LineGraphView: View {
 						.fill(gradient)
 						.frame(width: lineWidth, height: lineHeight)
 				}
+			}
+			.onContinuousHover { phase in
+				switch phase {
+				case .active(let location):
+					let percentage = CGFloat(location.x / canvasMaxX)
+					self.hoverIndex = size_t(percentage * CGFloat(self.points.count))
+					self.isPopover = !self.isPopover
+				case .ended:
+					self.isPopover = false
+				}
+			}
+			.popover(isPresented: self.$isPopover, arrowEdge: .bottom) {
+				let pt: LinePoint = self.points[self.hoverIndex]
+				LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
 			}
 			
 			Group() {
