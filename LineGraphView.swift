@@ -114,6 +114,15 @@ struct LineGraphView: View {
 		self.yFormatter = yFormatter
 	}
 	
+	func textSize(_ text: String, maxWidth: CGFloat = .greatestFiniteMagnitude) -> CGSize {
+		let boundingBox = NSString(string: text).boundingRect(
+			with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude),
+			options: [.usesLineFragmentOrigin, .usesFontLeading],
+			context: nil
+		)
+		return CGSize(width: ceil(boundingBox.width), height: ceil(boundingBox.height))
+	}
+
 	func formatXAxisValue(num: Double) -> String {
 		if self.xFormatter == nil {
 			return String(num)
@@ -244,12 +253,13 @@ struct LineGraphView: View {
 					let axisStep: Double = Double(i) * (rangeY / Double(numYHashmarks))
 					let axisValue: Double = minY + axisStep
 					let formattedValue: String = self.formatYAxisValue(num: axisValue)
-					
+					let textSize = self.textSize(formattedValue)
+
 					// Don't draw past the axis line.
 					if canvasY > yAxisTop.y {
 						Text(formattedValue)
 							.frame(maxWidth: .infinity, alignment: .center)
-							.position(x: origin.x - 28.0, y: canvasY - canvasMinX - 10.0)
+							.position(x: origin.x - textSize.width - 2, y: canvasY - canvasMinX - 10.0)
 					}
 				}
 			}
@@ -266,10 +276,12 @@ struct LineGraphView: View {
 					let axisStep: Double = Double(i) * (rangeX / Double(numXHashmarks))
 					let axisValue: Double = minX + axisStep
 					let formattedValue: String = self.formatXAxisValue(num: axisValue)
-					
+					let textSize = self.textSize(formattedValue)
+
 					Text(formattedValue)
+						.rotationEffect(Angle(degrees: 270))
 						.frame(maxWidth: .infinity, alignment: .center)
-						.position(x: canvasX, y: origin.y + hashMarkLength + 3)
+						.position(x: canvasX, y: origin.y + textSize.width + 2)
 				}
 			}
 		}
