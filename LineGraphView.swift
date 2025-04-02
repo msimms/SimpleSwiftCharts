@@ -122,7 +122,7 @@ struct LineGraphView: View {
 		)
 		return CGSize(width: ceil(boundingBox.width), height: ceil(boundingBox.height))
 	}
-
+	
 	func formatXAxisValue(num: Double) -> String {
 		if self.xFormatter == nil {
 			return String(num)
@@ -139,149 +139,161 @@ struct LineGraphView: View {
 	
 	var body: some View {
 		GeometryReader { geometry in
-#if os(macOS)
-			let canvasMinX: Double = 45.0
-			let canvasMinY: Double = 5.0
-			let numXHashmarks: Int = 10
-			let numYHashmarks: Int = 5
-#else
-			let canvasMinX: Double = self.orientation.isLandscape ? 45.0 : 15.0
-			let canvasMinY: Double = self.orientation.isLandscape ? 5.0 : 15.0
-			let numXHashmarks: Int = self.orientation.isLandscape ? 10 : 5
-			let numYHashmarks: Int = self.orientation.isLandscape ? 5 : 10
-#endif
-			let hashMarkLength: Double = 15.0
-			let axisWidth: Double = 4.0
-			let canvasMaxX: Double = geometry.size.width
-			let canvasMaxY: Double = geometry.size.height - canvasMinY
-			let origin: CGPoint = CGPoint(x: canvasMinX, y: canvasMaxY + axisWidth / 2)
-			let xAxisTop: CGPoint = CGPoint(x: canvasMaxX, y: origin.y)
-			let yAxisTop: CGPoint = CGPoint(x: origin.x, y: canvasMinY - axisWidth)
-			var tempAxisXOffset: Double = canvasMaxX
-			var tempAxisYOffset: Double = canvasMaxY
-			let xAxisHashMarkSpacing = (canvasMaxX / Double(numXHashmarks))
-			let yAxisHashMarkSpacing = (canvasMaxY - canvasMinY) / Double(numYHashmarks)
-#if os(macOS)
-			let fadedColor = Color(red: 0.5, green: 0.5, blue: 0.5)
-#else
-			let components = UIColor(self.color).cgColor.components!
-			let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
-#endif
-			let gradient = LinearGradient(
-				gradient: .init(colors: [self.color, fadedColor]),
-				startPoint: .top,
-				endPoint: .bottom
-			)
-			
 			Group() {
+#if os(macOS)
+				let canvasMinX: Double = 45.0
+				let canvasMinY: Double = 5.0
+				let numXHashmarks: Int = 10
+				let numYHashmarks: Int = 5
+#else
+				let canvasMinX: Double = self.orientation.isLandscape ? 45.0 : 15.0
+				let canvasMinY: Double = self.orientation.isLandscape ? 5.0 : 15.0
+				let numXHashmarks: Int = self.orientation.isLandscape ? 10 : 5
+				let numYHashmarks: Int = self.orientation.isLandscape ? 5 : 10
+#endif
+				let hashMarkLength: Double = 15.0
+				let axisWidth: Double = 4.0
+				let canvasMaxX: Double = geometry.size.width
+				let canvasMaxY: Double = geometry.size.height - canvasMinY
+				let origin: CGPoint = CGPoint(x: canvasMinX, y: canvasMaxY + axisWidth / 2)
+				let xAxisTop: CGPoint = CGPoint(x: canvasMaxX, y: origin.y)
+				let yAxisTop: CGPoint = CGPoint(x: origin.x, y: canvasMinY - axisWidth)
+				var tempAxisXOffset: Double = canvasMaxX
+				var tempAxisYOffset: Double = canvasMaxY
+				let xAxisHashMarkSpacing = (canvasMaxX / Double(numXHashmarks))
+				let yAxisHashMarkSpacing = (canvasMaxY - canvasMinY) / Double(numYHashmarks)
+#if os(macOS)
+				let fadedColor = Color(red: 0.5, green: 0.5, blue: 0.5)
+#else
+				let components = UIColor(self.color).cgColor.components!
+				let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
+#endif
+				let gradient = LinearGradient(
+					gradient: .init(colors: [self.color, fadedColor]),
+					startPoint: .top,
+					endPoint: .bottom
+				)
 				
-				// Draw the axis lines.
-				Path { path in
+				Group() {
 					
-					// X axis
-					path.move(to: origin)
-					path.addLine(to: xAxisTop)
-					
-					// Y axis
-					path.move(to: origin)
-					path.addLine(to: yAxisTop)
-				}
-				.stroke(.gray, lineWidth: axisWidth)
-				
-				// Draw the X axis hash marks.
-				Path { path in
-					for _ in 1...numXHashmarks {
-						let canvasX = canvasMinX + (canvasMaxX - tempAxisXOffset)
-						tempAxisXOffset -= xAxisHashMarkSpacing
+					// Draw the axis lines.
+					Path { path in
 						
-						path.move(to: CGPoint(x: canvasX, y: canvasMaxY))
-						path.addLine(to: CGPoint(x: canvasX, y: canvasMaxY + hashMarkLength))
+						// X axis
+						path.move(to: origin)
+						path.addLine(to: xAxisTop)
+						
+						// Y axis
+						path.move(to: origin)
+						path.addLine(to: yAxisTop)
+					}
+					.stroke(.gray, lineWidth: axisWidth)
+					
+					// Draw the X axis hash marks.
+					Path { path in
+						for _ in 1...numXHashmarks {
+							let canvasX: Double = canvasMinX + (canvasMaxX - tempAxisXOffset)
+							tempAxisXOffset -= xAxisHashMarkSpacing
+							
+							path.move(to: CGPoint(x: canvasX, y: canvasMaxY))
+							path.addLine(to: CGPoint(x: canvasX, y: canvasMaxY + hashMarkLength))
+						}
+					}
+					.stroke(.gray, lineWidth: axisWidth / 2)
+					
+					// Draw the Y axis hash marks.
+					Path { path in
+						for _ in 1...numYHashmarks {
+							let canvasY: Double = canvasMinY + (canvasMaxY - tempAxisYOffset)
+							tempAxisYOffset -= yAxisHashMarkSpacing
+							
+							// Don't draw past the axis line.
+							if tempAxisYOffset <= yAxisTop.y {
+								break
+							}
+							
+							path.move(to: CGPoint(x: canvasMinX, y: canvasY))
+							path.addLine(to: CGPoint(x: canvasMinX - hashMarkLength, y: canvasY))
+						}
+					}
+					.stroke(.gray, lineWidth: axisWidth / 2)
+					
+					// Draw the data line.
+					let lineWidth: Double = xAxisTop.x - origin.x
+					let lineHeight: Double = origin.y - yAxisTop.y
+					if lineWidth > 0 && lineHeight > 0 {
+						Line(points: self.points, origin: origin)
+							.fill(gradient)
+							.frame(width: lineWidth, height: lineHeight)
+							.onContinuousHover { phase in
+								switch phase {
+								case .active(let location):
+									self.hoverIndex = size_t(CGFloat(location.x / canvasMaxX) * CGFloat(self.points.count))
+									self.isPopover = !self.isPopover
+								case .ended:
+									self.isPopover = false
+								}
+							}
+							.onTapGesture(count: 1) { location in
+								self.hoverIndex = size_t(CGFloat(location.x / canvasMaxX) * CGFloat(self.points.count))
+								self.isPopover.toggle()
+							}
+#if os(macOS)
+							.popover(isPresented: self.$isPopover) {
+								let pt: LinePoint = self.points[self.hoverIndex]
+								LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
+							}
+#else
+							.sheet(isPresented: self.$isPopover) {
+								let pt: LinePoint = self.points[self.hoverIndex]
+								LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
+							}
+#endif
 					}
 				}
-				.stroke(.gray, lineWidth: axisWidth / 2)
 				
-				// Draw the Y axis hash marks.
-				Path { path in
-					for _ in 1...numYHashmarks {
-						let canvasY = canvasMinY + (canvasMaxY - tempAxisYOffset)
-						tempAxisYOffset -= yAxisHashMarkSpacing
+				Group() {
+					
+					// Add the Y axis labels.
+					let minY = self.points.map { $0.y }.min() ?? 0.0
+					let maxY = self.points.map { $0.y }.max() ?? 0.0
+					let rangeY = maxY - minY
+					ForEach(0..<numYHashmarks, id: \.self) { i in
+						let canvasYOffset: Double = Double(i) * yAxisHashMarkSpacing
+						let canvasY: Double = canvasMinY + (canvasMaxY - canvasYOffset)
+						let axisStep: Double = Double(i) * (rangeY / Double(numYHashmarks))
+						let axisValue: Double = minY + axisStep
+						let formattedValue: String = self.formatYAxisValue(num: axisValue)
+						let textSize = self.textSize(formattedValue)
 						
 						// Don't draw past the axis line.
-						if tempAxisYOffset <= yAxisTop.y {
-							break
+						if canvasY > yAxisTop.y {
+							Text(formattedValue)
+								.frame(maxWidth: .infinity, alignment: .center)
+								.position(x: origin.x - textSize.width - 2, y: canvasY - canvasMinX - 10.0)
 						}
+					}
+				}
+				
+				Group() {
+					
+					// Add the X axis labels.
+					let minX = self.points.map { Double($0.x) }.min() ?? 0.0
+					let maxX = self.points.map { Double($0.x) }.max() ?? 0.0
+					let rangeX = maxX - minX
+					ForEach(0..<numXHashmarks, id: \.self) { i in
+						let canvasXOffset: Double = Double(i) * xAxisHashMarkSpacing
+						let canvasX: Double = canvasMinX + canvasXOffset
+						let axisStep: Double = Double(i) * (rangeX / Double(numXHashmarks))
+						let axisValue: Double = minX + axisStep
+						let formattedValue: String = self.formatXAxisValue(num: axisValue)
+						let textSize = self.textSize(formattedValue)
 						
-						path.move(to: CGPoint(x: canvasMinX, y: canvasY))
-						path.addLine(to: CGPoint(x: canvasMinX - hashMarkLength, y: canvasY))
-					}
-				}
-				.stroke(.gray, lineWidth: axisWidth / 2)
-				
-				// Draw the data line.
-				let lineWidth = xAxisTop.x - origin.x
-				let lineHeight = origin.y - yAxisTop.y
-				if lineWidth > 0 && lineHeight > 0 {
-					Line(points: self.points, origin: origin)
-						.fill(gradient)
-						.frame(width: lineWidth, height: lineHeight)
-				}
-			}
-			.onContinuousHover { phase in
-				switch phase {
-				case .active(let location):
-					let percentage = CGFloat(location.x / canvasMaxX)
-					self.hoverIndex = size_t(percentage * CGFloat(self.points.count))
-					self.isPopover = !self.isPopover
-				case .ended:
-					self.isPopover = false
-				}
-			}
-			.popover(isPresented: self.$isPopover, arrowEdge: .bottom) {
-				let pt: LinePoint = self.points[self.hoverIndex]
-				LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
-			}
-			
-			Group() {
-				
-				// Add the Y axis labels.
-				let minY = self.points.map { $0.y }.min() ?? 0.0
-				let maxY = self.points.map { $0.y }.max() ?? 0.0
-				let rangeY = maxY - minY
-				ForEach(0..<numYHashmarks, id: \.self) { i in
-					let canvasYOffset: Double = Double(i) * yAxisHashMarkSpacing
-					let canvasY: Double = canvasMinY + (canvasMaxY - canvasYOffset)
-					let axisStep: Double = Double(i) * (rangeY / Double(numYHashmarks))
-					let axisValue: Double = minY + axisStep
-					let formattedValue: String = self.formatYAxisValue(num: axisValue)
-					let textSize = self.textSize(formattedValue)
-
-					// Don't draw past the axis line.
-					if canvasY > yAxisTop.y {
 						Text(formattedValue)
+							.rotationEffect(Angle(degrees: 270))
 							.frame(maxWidth: .infinity, alignment: .center)
-							.position(x: origin.x - textSize.width - 2, y: canvasY - canvasMinX - 10.0)
+							.position(x: canvasX, y: origin.y + textSize.width + 2)
 					}
-				}
-			}
-			
-			Group() {
-				
-				// Add the X axis labels.
-				let minX = self.points.map { Double($0.x) }.min() ?? 0.0
-				let maxX = self.points.map { Double($0.x) }.max() ?? 0.0
-				let rangeX = maxX - minX
-				ForEach(0..<numXHashmarks, id: \.self) { i in
-					let canvasXOffset: Double = Double(i) * xAxisHashMarkSpacing
-					let canvasX: Double = canvasMinX + canvasXOffset
-					let axisStep: Double = Double(i) * (rangeX / Double(numXHashmarks))
-					let axisValue: Double = minX + axisStep
-					let formattedValue: String = self.formatXAxisValue(num: axisValue)
-					let textSize = self.textSize(formattedValue)
-
-					Text(formattedValue)
-						.rotationEffect(Angle(degrees: 270))
-						.frame(maxWidth: .infinity, alignment: .center)
-						.position(x: canvasX, y: origin.y + textSize.width + 2)
 				}
 			}
 		}
