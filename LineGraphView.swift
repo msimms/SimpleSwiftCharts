@@ -163,7 +163,8 @@ struct LineGraphView: View {
 				let xAxisHashMarkSpacing = (canvasMaxX / Double(numXHashmarks))
 				let yAxisHashMarkSpacing = (canvasMaxY - canvasMinY) / Double(numYHashmarks)
 #if os(macOS)
-				let fadedColor = Color(red: 0.5, green: 0.5, blue: 0.5)
+				let components = Color(self.color).cgColor?.components! ?? [0.5, 0.5, 0.5, 1.0]
+				let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
 #else
 				let components = UIColor(self.color).cgColor.components!
 				let fadedColor = Color(red: components[0] * 0.5, green: components[1] * 0.5, blue: components[2] * 0.5)
