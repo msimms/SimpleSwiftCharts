@@ -88,7 +88,7 @@ struct LinePopoverView: View {
 	
 	var body: some View {
 		VStack {
-			Text(xStr + ", " + yStr)
+			Text("x = " + xStr + ", y = " + yStr)
 				.padding()
 		}
 		.padding()
@@ -248,6 +248,7 @@ struct LineGraphView: View {
 							.sheet(isPresented: self.$isPopover) {
 								let pt: LinePoint = self.points[self.hoverIndex]
 								LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
+									.presentationDetents([.medium])
 							}
 #endif
 					}
