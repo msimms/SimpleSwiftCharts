@@ -229,20 +229,22 @@ struct LineGraphView: View {
 							.onContinuousHover { phase in
 								switch phase {
 								case .active(let location):
-									self.hoverIndex = size_t(CGFloat(location.x / canvasMaxX) * CGFloat(self.points.count))
+									self.hoverIndex = size_t(CGFloat((location.x - canvasMinX) / (canvasMaxX - canvasMinX)) * CGFloat(self.points.count))
 									self.isPopover = !self.isPopover
 								case .ended:
 									self.isPopover = false
 								}
 							}
 							.onTapGesture(count: 1) { location in
-								self.hoverIndex = size_t(CGFloat(location.x / canvasMaxX) * CGFloat(self.points.count))
+								self.hoverIndex = size_t(CGFloat((location.x - canvasMinX) / (canvasMaxX - canvasMinX)) * CGFloat(self.points.count))
 								self.isPopover.toggle()
 							}
 #if os(macOS)
 							.popover(isPresented: self.$isPopover) {
-								let pt: LinePoint = self.points[self.hoverIndex]
-								LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
+								if self.hoverIndex > 0 {
+									let pt: LinePoint = self.points[self.hoverIndex]
+									LinePopoverView(xStr: self.formatXAxisValue(num: Double(pt.x)), yStr: self.formatYAxisValue(num: pt.y))
+								}
 							}
 #else
 							.sheet(isPresented: self.$isPopover) {
